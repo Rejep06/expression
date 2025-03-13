@@ -37,6 +37,8 @@ int main()
     // Вычисляем выражение в различных контекстах.
     printf("EVAL[%s] = %Lf\n", expr1.to_string().c_str(), expr1.eval(input_context));
 
+    expr1 = expr1.diff("x");
+
     printf("EVAL[%s]{x = 1.0, y = 2.0} = %Lf\n", expr1.to_string().c_str(), expr1.eval(context1));
     printf("EVAL[%s]{x = 2.0, y = 3.0} = %Lf\n", expr1.to_string().c_str(), expr1.eval(context2));
 

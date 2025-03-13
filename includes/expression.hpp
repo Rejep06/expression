@@ -7,6 +7,9 @@
 #include <complex>
 
 template <typename T>
+class Expression;
+
+template <typename T>
 class ExpressionBase
 {
 public:
@@ -14,6 +17,8 @@ public:
     virtual ~ExpressionBase() = default;
 
     virtual T eval(std::map<std::string, T> context) const = 0;
+
+    virtual Expression<T> diff(const std::string &by) = 0;
 
     virtual std::string to_string() const = 0;
 };
@@ -33,6 +38,10 @@ public:
     // friend Expression operator""_val(T val);
     // friend Expression operator""_var(const char *variable);
     // friend Expression operator""_var(const char *variable, size_t size);
+
+    Expression<T> diff(const std::string &by) const;
+
+    Expression<T> operator-() const;
 
     Expression<T> &operator=(const Expression<T> &other);
     Expression<T> &operator=(Expression<T> &&other);
@@ -72,6 +81,8 @@ public:
 
     virtual ~Value() override = default;
 
+    virtual Expression<T> diff(const std::string &by) override;
+
     virtual T eval(std::map<std::string, T> context) const override;
     virtual std::string to_string() const override;
 
@@ -87,11 +98,30 @@ public:
 
     virtual ~Variable() override = default;
 
+    virtual Expression<T> diff(const std::string &by) override;
+
     virtual T eval(std::map<std::string, T> context) const override;
     virtual std::string to_string() const override;
 
 private:
     std::string name;
+};
+
+template <typename T>
+class Negate : public ExpressionBase<T>
+{
+public:
+    Negate(const Expression<T> &expr_);
+
+    virtual ~Negate() override = default;
+
+    virtual Expression<T> diff(const std::string &by) override;
+
+    virtual T eval(std::map<std::string, T> context) const override;
+    virtual std::string to_string() const override;
+
+private:
+    Expression<T> expr;
 };
 
 template <typename T>
@@ -101,6 +131,8 @@ public:
     OpAdd(const Expression<T> &left_, const Expression<T> &right_);
 
     virtual ~OpAdd() override = default;
+
+    virtual Expression<T> diff(const std::string &by) override;
 
     virtual T eval(std::map<std::string, T> context) const override;
     virtual std::string to_string() const override;
@@ -118,6 +150,8 @@ public:
 
     virtual ~OpMult() override = default;
 
+    virtual Expression<T> diff(const std::string &by) override;
+
     virtual T eval(std::map<std::string, T> context) const override;
     virtual std::string to_string() const override;
 
@@ -133,6 +167,8 @@ public:
     OpSub(const Expression<T> &left_, const Expression<T> &right_);
 
     virtual ~OpSub() override = default;
+
+    virtual Expression<T> diff(const std::string &by) override;
 
     virtual T eval(std::map<std::string, T> context) const override;
     virtual std::string to_string() const override;
@@ -150,6 +186,8 @@ public:
 
     virtual ~OpDiv() override = default;
 
+    virtual Expression<T> diff(const std::string &by) override;
+
     virtual T eval(std::map<std::string, T> context) const override;
     virtual std::string to_string() const override;
 
@@ -165,6 +203,8 @@ public:
     OpPow(const Expression<T> &left_, const Expression<T> &right_);
 
     virtual ~OpPow() override = default;
+
+    virtual Expression<T> diff(const std::string &by) override;
 
     virtual T eval(std::map<std::string, T> context) const override;
     virtual std::string to_string() const override;
@@ -182,6 +222,8 @@ public:
 
     virtual ~SinFunc() override = default;
 
+    virtual Expression<T> diff(const std::string &by) override;
+
     virtual T eval(std::map<std::string, T> context) const override;
     virtual std::string to_string() const override;
 
@@ -196,6 +238,8 @@ public:
     CosFunc(const Expression<T> &arg_);
 
     virtual ~CosFunc() override = default;
+
+    virtual Expression<T> diff(const std::string &by) override;
 
     virtual T eval(std::map<std::string, T> context) const override;
     virtual std::string to_string() const override;
@@ -212,6 +256,8 @@ public:
 
     virtual ~LnFunc() override = default;
 
+    virtual Expression<T> diff(const std::string &by) override;
+
     virtual T eval(std::map<std::string, T> context) const override;
     virtual std::string to_string() const override;
 
@@ -226,6 +272,8 @@ public:
     ExpFunc(const Expression<T> &arg_);
 
     virtual ~ExpFunc() override = default;
+
+    virtual Expression<T> diff(const std::string &by) override;
 
     virtual T eval(std::map<std::string, T> context) const override;
     virtual std::string to_string() const override;

@@ -26,6 +26,18 @@ Expression<T>::Expression(const Expression<T> &other) : base(other.base)
 }
 
 template <typename T>
+Expression<T> Expression<T>::diff(const std::string &by) const
+{
+    return Expression<T>(base->diff(by));
+}
+
+template <typename T>
+Expression<T> Expression<T>::operator-() const
+{
+    return Expression<T>(std::make_shared<Negate<T>>(*this));
+}
+
+template <typename T>
 Expression<T> &Expression<T>::operator=(Expression<T> &&other)
 {
     if (this != &other)
@@ -155,12 +167,13 @@ T Expression<T>::eval(std::map<std::string, T> context) const
 template <typename T>
 std::string Expression<T>::to_string() const
 {
-        // throw std::runtime_error(base->to_string());
-    
+    // throw std::runtime_error(base->to_string());
+
     return base->to_string();
 }
 
 template class Expression<long double>;
+
 // =============
 // |class Value|
 // =============
@@ -169,6 +182,12 @@ template <typename T>
 Value<T>::Value(T number)
 {
     value = number;
+}
+
+template <typename T>
+Expression<T> Value<T>::diff(const std::string &by [[maybe_unused]])
+{
+    return Expression<T>(0);
 }
 
 template <typename T>
@@ -189,6 +208,39 @@ std::string Value<T>::to_string() const
 
 template class Value<long double>;
 // template class Value<std::complex<long double>>;
+
+// =============
+// |class Negate|
+// =============
+
+template <typename T>
+Negate<T>::Negate(const Expression<T> &expr_) : expr(expr_)
+{
+}
+
+template <typename T>
+Expression<T> Negate<T>::diff(const std::string &by)
+{
+    return -expr.diff(by);
+}
+
+template <typename T>
+T Negate<T>::eval(std::map<std::string, T> context) const
+{
+    T value = expr.eval(context);
+    return -value;
+}
+
+template <typename T>
+std::string Negate<T>::to_string() const
+{
+    return std::string("-(") + expr.to_string() +
+           std::string(")");
+}
+
+template class Negate<long double>;
+// template class Negate<std::complex<long double>>;
+
 // ================
 // |class Variable|
 // ================
@@ -196,6 +248,16 @@ template class Value<long double>;
 template <typename T>
 Variable<T>::Variable(std::string name_) : name(name_)
 {
+}
+
+template <typename T>
+Expression<T> Variable<T>::diff(const std::string &by)
+{
+    if (by == name)
+    {
+        return Expression<T>(1);
+    }
+    return Expression<T>(0);
 }
 
 template <typename T>
@@ -229,6 +291,12 @@ OpAdd<T>::OpAdd(const Expression<T> &left_, const Expression<T> &right_) : left(
 }
 
 template <typename T>
+Expression<T> OpAdd<T>::diff(const std::string &by)
+{
+    return left.diff(by) + right.diff(by);
+}
+
+template <typename T>
 T OpAdd<T>::eval(std::map<std::string, T> context) const
 {
     T value_left = left.eval(context);
@@ -245,6 +313,9 @@ std::string OpAdd<T>::to_string() const
            std::string(")");
 }
 
+template class OpAdd<long double>;
+// template class OppAdd<std::complex<long double>>;
+
 // =====================
 // |class OpMult|
 // =====================
@@ -253,6 +324,12 @@ template <typename T>
 OpMult<T>::OpMult(const Expression<T> &left_, const Expression<T> &right_) : left(left_),
                                                                              right(right_)
 {
+}
+
+template <typename T>
+Expression<T> OpMult<T>::diff(const std::string &by)
+{
+    return left.diff(by) * right + left * right.diff(by);
 }
 
 template <typename T>
@@ -272,6 +349,9 @@ std::string OpMult<T>::to_string() const
            std::string(")");
 }
 
+template class OpMult<long double>;
+// template class OpMult<std::complex<long double>>;
+
 // =====================
 // |class OpSub|
 // =====================
@@ -280,6 +360,12 @@ template <typename T>
 OpSub<T>::OpSub(const Expression<T> &left_, const Expression<T> &right_) : left(left_),
                                                                            right(right_)
 {
+}
+
+template <typename T>
+Expression<T> OpSub<T>::diff(const std::string &by)
+{
+    return left.diff(by) - right.diff(by);
 }
 
 template <typename T>
@@ -299,6 +385,9 @@ std::string OpSub<T>::to_string() const
            std::string(")");
 }
 
+template class OpSub<long double>;
+// template class OpSub<std::complex<long double>>;
+
 // =====================
 // |class OpDiv|
 // =====================
@@ -307,6 +396,12 @@ template <typename T>
 OpDiv<T>::OpDiv(const Expression<T> &left_, const Expression<T> &right_) : left(left_),
                                                                            right(right_)
 {
+}
+
+template <typename T>
+Expression<T> OpDiv<T>::diff(const std::string &by)
+{
+    return (left.diff(by) * right - left * right.diff(by)) / (right ^ 2);
 }
 
 template <typename T>
@@ -326,6 +421,9 @@ std::string OpDiv<T>::to_string() const
            std::string(")");
 }
 
+template class OpDiv<long double>;
+// template class OpDiv<std::complex<long double>>;
+
 // =====================
 // |class OpPow|
 // =====================
@@ -334,6 +432,12 @@ template <typename T>
 OpPow<T>::OpPow(const Expression<T> &left_, const Expression<T> &right_) : left(left_),
                                                                            right(right_)
 {
+}
+
+template <typename T>
+Expression<T> OpPow<T>::diff(const std::string &by)
+{
+    return (left ^ right) * (left.ExprLn() * right.diff(by) + left.diff(by) * right / left);
 }
 
 template <typename T>
@@ -353,6 +457,9 @@ std::string OpPow<T>::to_string() const
            std::string(")");
 }
 
+template class OpPow<long double>;
+// template class OpPow<std::complex<long double>>;
+
 // =====================
 // |class SinFunc|
 // =====================
@@ -360,6 +467,12 @@ std::string OpPow<T>::to_string() const
 template <typename T>
 SinFunc<T>::SinFunc(const Expression<T> &arg_) : arg(arg_)
 {
+}
+
+template <typename T>
+Expression<T> SinFunc<T>::diff(const std::string &by)
+{
+    return arg.diff(by) * arg.ExprCos();
 }
 
 template <typename T>
@@ -377,6 +490,9 @@ std::string SinFunc<T>::to_string() const
            std::string(")");
 }
 
+template class SinFunc<long double>;
+// template class SinFunc<std::complex<long double>>;
+
 // =====================
 // |class CosFunc|
 // =====================
@@ -384,6 +500,12 @@ std::string SinFunc<T>::to_string() const
 template <typename T>
 CosFunc<T>::CosFunc(const Expression<T> &arg_) : arg(arg_)
 {
+}
+
+template <typename T>
+Expression<T> CosFunc<T>::diff(const std::string &by)
+{
+    return -arg.diff(by) * arg.ExprSin();
 }
 
 template <typename T>
@@ -401,6 +523,9 @@ std::string CosFunc<T>::to_string() const
            std::string(")");
 }
 
+template class CosFunc<long double>;
+// template class CosFunc<std::complex<long double>>;
+
 // =====================
 // |class LnFunc|
 // =====================
@@ -408,6 +533,12 @@ std::string CosFunc<T>::to_string() const
 template <typename T>
 LnFunc<T>::LnFunc(const Expression<T> &arg_) : arg(arg_)
 {
+}
+
+template <typename T>
+Expression<T> LnFunc<T>::diff(const std::string &by)
+{
+    return arg.diff(by) / arg;
 }
 
 template <typename T>
@@ -433,6 +564,9 @@ std::string LnFunc<T>::to_string() const
            std::string(")");
 }
 
+template class LnFunc<long double>;
+// template class LnFunc<std::complex<long double>>;
+
 // =====================
 // |class ExpFunc|
 // =====================
@@ -440,6 +574,12 @@ std::string LnFunc<T>::to_string() const
 template <typename T>
 ExpFunc<T>::ExpFunc(const Expression<T> &arg_) : arg(arg_)
 {
+}
+
+template <typename T>
+Expression<T> ExpFunc<T>::diff(const std::string &by)
+{
+    return arg * arg.diff(by);
 }
 
 template <typename T>
@@ -456,3 +596,6 @@ std::string ExpFunc<T>::to_string() const
     return std::string("sin(") + arg.to_string() +
            std::string(")");
 }
+
+template class ExpFunc<long double>;
+// template class ExpFunc<std::complex<long double>>;
