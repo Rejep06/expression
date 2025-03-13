@@ -22,16 +22,22 @@ CXXFLAGS += -I $(abspath include)
 SOURCES := $(wildcard src/*.cpp)
 OBJECTS := $(SOURCES:src/%.cpp=build/%.o)
 
-# Итоговый исполняемый файл
+# Итоговые исполняемые файлы
 EXECUTABLE = build/eval
+TEST_EXECUTABLE = build/test
 
 # Главная цель
 default: $(EXECUTABLE)
 
-# Линковка
-$(EXECUTABLE): $(OBJECTS)
+# Линковка для eval.cpp
+$(EXECUTABLE): $(filter-out build/test.o, $(OBJECTS)) | build
 	@printf "Linking executable $(EXECUTABLE)\n"
-	$(CXX) $(LDFLAGS) $(OBJECTS) -o $@
+	$(CXX) $(LDFLAGS) $(filter-out build/test.o, $(OBJECTS)) -o $@
+
+# Линковка для тестов (включаются все исходники кроме eval.cpp)
+$(TEST_EXECUTABLE): $(filter-out src/eval.cpp, $(SOURCES)) | build
+	@printf "Building test executable $(TEST_EXECUTABLE)\n"
+	$(CXX) $(CXXFLAGS) $(filter-out src/eval.cpp, $(SOURCES)) -o $@
 
 # Компиляция всех .cpp в .o
 build/%.o: src/%.cpp | build
@@ -42,15 +48,20 @@ build/%.o: src/%.cpp | build
 build:
 	mkdir -p build
 
-# Запуск
+# Запуск eval (не линковать test.cpp)
 run: $(EXECUTABLE)
 	@printf "Running executable\n"
 	@mkdir -p res
 	@./$(EXECUTABLE) --eval "10 * (x + 4) + y * 3"
+
+# Запуск тестов
+test: $(TEST_EXECUTABLE)
+	@printf "Running tests\n"
+	@./$(TEST_EXECUTABLE)
 
 # Очистка
 clean:
 	@printf "Cleaning build and resource directories\n"
 	rm -rf res build
 
-.PHONY: default run clean
+.PHONY: default run test clean
