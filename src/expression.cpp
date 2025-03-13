@@ -100,6 +100,30 @@ Expression<T> &Expression<T>::operator^=(const Expression<T> &other)
     return *this;
 }
 
+template <typename T>
+Expression<T> Expression<T>::ExprSin() const
+{
+    return Expression<T>(std::make_shared<SinFunc<T>>(*this));
+}
+
+template <typename T>
+Expression<T> Expression<T>::ExprCos() const
+{
+    return Expression<T>(std::make_shared<CosFunc<T>>(*this));
+}
+
+template <typename T>
+Expression<T> Expression<T>::ExprLn() const
+{
+    return Expression<T>(std::make_shared<LnFunc<T>>(*this));
+}
+
+template <typename T>
+Expression<T> Expression<T>::ExprExp() const
+{
+    return Expression<T>(std::make_shared<ExpFunc<T>>(*this));
+}
+
 // template <typename T>
 // Expression<T> operator""_val(T number)
 // {
@@ -131,6 +155,8 @@ T Expression<T>::eval(std::map<std::string, T> context) const
 template <typename T>
 std::string Expression<T>::to_string() const
 {
+        // throw std::runtime_error(base->to_string());
+    
     return base->to_string();
 }
 
@@ -341,7 +367,7 @@ T SinFunc<T>::eval(std::map<std::string, T> context) const
 {
     T value_arg = arg.eval(context);
 
-    return std::sin(arg);
+    return std::sin(value_arg);
 }
 
 template <typename T>
@@ -365,7 +391,7 @@ T CosFunc<T>::eval(std::map<std::string, T> context) const
 {
     T value_arg = arg.eval(context);
 
-    return std::cos(arg);
+    return std::cos(value_arg);
 }
 
 template <typename T>
@@ -387,7 +413,7 @@ LnFunc<T>::LnFunc(const Expression<T> &arg_) : arg(arg_)
 template <typename T>
 T LnFunc<T>::eval(std::map<std::string, T> context) const
 {
-    T arg_value = arg->resolve();
+    T arg_value = arg.eval(context);
     if (arg_value <= 0.0L)
         throw std::runtime_error("Ln of negative value in LnFunc::resolve");
     return std::log(arg_value);
@@ -421,7 +447,7 @@ T ExpFunc<T>::eval(std::map<std::string, T> context) const
 {
     T value_arg = arg.eval(context);
 
-    return std::exp(arg);
+    return std::exp(value_arg);
 }
 
 template <typename T>

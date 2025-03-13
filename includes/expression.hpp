@@ -22,6 +22,7 @@ template <typename T>
 class Expression
 {
 public:
+    Expression() = default;
     Expression(T value);
     Expression(const std::string &variable);
     Expression(const Expression<T> &other);
@@ -50,6 +51,11 @@ public:
 
     Expression<T> operator^(const Expression<T> &other) const;
     Expression<T> &operator^=(const Expression<T> &other);
+
+    Expression<T> ExprSin() const;
+    Expression<T> ExprCos() const;
+    Expression<T> ExprLn() const;
+    Expression<T> ExprExp() const;
 
     T eval(std::map<std::string, T> context) const;
     std::string to_string() const;
@@ -167,7 +173,6 @@ private:
     Expression<T> left;
     Expression<T> right;
 };
-
 
 template <typename T>
 class SinFunc : public ExpressionBase<T>
