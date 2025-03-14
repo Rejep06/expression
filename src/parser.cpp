@@ -129,7 +129,7 @@ Expression<T> Parser<T>::parseFactor()
     else if (match(TOK_FUNCTION))
     {
         Token curToken = previousToken_;
-        Expression<T> expr_ = parseExpr();\
+        Expression<T> expr_ = parseExpr();
         if (curToken.lexeme == "sin(")
         {
             expr = expr_.ExprSin();
@@ -165,7 +165,7 @@ Expression<T> Parser<T>::parseFactor()
 
     if (match(TOK_POW))
     {
-        Expression<T> pow_expr = parseExpr();
+        Expression<T> pow_expr = parseFactor();
 
         expr ^= pow_expr;
     }
