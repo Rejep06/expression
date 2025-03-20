@@ -89,6 +89,36 @@ bool test_diff()
     return (std::abs(expr_diff.eval(context) - (std::sin(4) * 4 + 5 * (std::cos(4) * 4 + std::sin(4) * 4 * std::log(2)) + 3.0 / 2)) < 1e-14);
 }
 
+bool compare_complex(const std::complex<long double> &c1, const std::complex<long double> &c2, long double epsilon = 1e-9)
+{
+    return std::abs(c1.real() - c2.real()) < epsilon && std::abs(c1.imag() - c2.imag()) < epsilon;
+}
+
+bool test_complex()
+{
+    std::complex<long double> x_(1, 0), y_(1, 1);
+
+    std::map<std::string, std::complex<long double>> context =
+        {
+            {"x", x_}, {"y", y_}};
+
+    // // Создаём объект выражения на основе механизма синтаксического соответствия.
+
+    std::complex<long double> a(3.0, 4.0);
+    std::complex<long double> b(1.0, 2.0);
+    Expression<std::complex<long double>> a_(a), b_(2.0);
+    Expression<std::complex<long double>> x("x"), y("y");
+    Expression<std::complex<long double>> two(2);
+
+    Expression expr1 = a_ + x / b_;
+    expr1 += y * (x ^ two);
+
+    expr1 = expr1.ExprSin();
+    std::complex<long double> ans(-72.54245971335665722074, -15.64172509407547033769);
+
+    return (compare_complex(expr1.eval(context), ans));
+}
+
 int main()
 {
     printf("Start testing...\n");
@@ -97,12 +127,7 @@ int main()
     run_test("Test Functions", test_functions);
     run_test("Test Parser", test_parser);
     run_test("Test Diff", test_diff);
-    // run_test("Test Operator Multiple", test_operator_multipe);
-    // run_test("Test Operator Div", test_operator_div);
-    // run_test("Test Operator !=", test_operator_notequal);
-    // run_test("Test Operator>", test_operator_geater);
-    // run_test("Test Operator<", test_operator_less);
-    // run_test("Test Literal", test_literal);
+    run_test("Test Complex ", test_complex);
 
     return EXIT_SUCCESS;
 }

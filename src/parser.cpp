@@ -52,7 +52,7 @@ bool Parser<T>::match(TokenType type)
 template <typename T>
 Expression<T> Parser<T>::parseExpression()
 {
-    Expression expr = parseExpr();
+    Expression<T> expr = parseExpr();
 
     expect({TOK_EOF});
 
@@ -65,7 +65,7 @@ Expression<T> Parser<T>::parseExpr()
 #ifndef NDEBUG
     std::cout << "Expr" << std::endl;
 #endif
-    Expression expr = parseTerm();
+    Expression<T> expr = parseTerm();
 
     while (currentToken_.type == TOK_PLUS || currentToken_.type == TOK_SUB)
     {
@@ -73,7 +73,7 @@ Expression<T> Parser<T>::parseExpr()
         advance();
         Token curToken = currentToken_;
         // Считываем следующее слагаемое в выражении.
-        Expression term = parseTerm();
+        Expression<T> term = parseTerm();
 
         // Обновляем выражение для суммы или вычитание.
         if (curToken.type == TOK_SUB)
@@ -91,7 +91,7 @@ Expression<T> Parser<T>::parseTerm()
 #ifndef NDEBUG
     std::cout << "Term" << std::endl;
 #endif
-    Expression term = parseFactor();
+    Expression<T> term = parsePower();
 
     while (currentToken_.type == TOK_MULTIPLY || currentToken_.type == TOK_DIV)
     {
@@ -100,16 +100,33 @@ Expression<T> Parser<T>::parseTerm()
 
         Token curToken = currentToken_;
         // Считываем следующий множитель в выражении.
-        Expression factor = parseFactor();
+        Expression<T> power = parsePower();
 
         // Обновляем выражение для произведения и деление.
         if (curToken.type == TOK_DIV)
-            term /= factor;
+            term /= power;
         else
-            term *= factor;
+            term *= power;
     }
 
     return term;
+}
+
+template <typename T>
+Expression<T> Parser<T>::parsePower()
+{
+#ifndef NDEBUG
+    std::cout << "Power" << std::endl;
+#endif
+    Expression<T> power = parseFactor();
+
+    if (match(TOK_POW))
+    {
+        Expression<T> expon = parsePower();
+        power ^= expon;
+    }
+
+    return power;
 }
 
 template <typename T>
@@ -121,7 +138,7 @@ Expression<T> Parser<T>::parseFactor()
     Expression<T> expr;
     if (match(TOK_BRACKET_LEFT))
     {
-        
+
         expr = parseExpr();
 
         expect({TOK_BRACKET_RIGHT});
@@ -162,14 +179,6 @@ Expression<T> Parser<T>::parseFactor()
             "Got unexpected token \"" + currentToken_.lexeme +
             "\" of type " + std::to_string(currentToken_.type));
     }
-
-    if (match(TOK_POW))
-    {
-        Expression<T> pow_expr = parseFactor();
-
-        expr ^= pow_expr;
-    }
-    // std::cout<<expr.to_string();
 
     return expr;
 }

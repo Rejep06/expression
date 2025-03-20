@@ -10,30 +10,38 @@
 // Терминалы - лексемы языка выражений: Value, Variable, +, *, (, )
 //
 // Правила продукций в форме Бэкуса-Наура.
-// Expr   ::= Term + Expr
+// Expr   ::= Expr + Term
+//          | Expr - Term
 //          | Term
 //
-// Term   ::= Factor * Term
+// Term   ::= Term * Power
+//          | Term / Power
+//          | Power
+//
+// Power  ::= Factor ^ Power
 //          | Factor
 //
 // Factor ::= ( Expr )
+//          | Function ( Expr )
 //          | Value
 //          | Variable
+//          | Factor [^ Factor]
 
 // Синтаксический анализатор для синтаксического разбора языка выражений.
 
-template <typename T> class Parser
+template <typename T>
+class Parser
 {
 public:
     // Создание парсера на основе лексера.
-    Parser(Lexer& lexer);
+    Parser(Lexer &lexer);
 
     // Синтаксический разбор выражения.
     Expression<T> parseExpression();
 
 private:
     // Ссылка на лексический анализатор.
-    Lexer& lexer_;
+    Lexer &lexer_;
     // Текущая лексема.
     Token currentToken_;
     // Предыдущая считанная лексема.
@@ -49,6 +57,7 @@ private:
     // Методы для синтаксического разбора согласно формальной грамматике.
     Expression<T> parseExpr();
     Expression<T> parseTerm();
+    Expression<T> parsePower();
     Expression<T> parseFactor();
 };
 
